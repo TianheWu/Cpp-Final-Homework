@@ -1,0 +1,251 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include "employee.h"
+using namespace std;
+int employee::employeeNo = 1000;                   // 员工编号基数为1000
+
+employee::employee() {
+	individualEmpNo = employeeNo++;                // 新输入的员工编号为目前最大编号加1
+	grade = 1;                                     // 级别初值为1
+	accumPay = 0.0;                                // 月薪总额初值为0
+}
+
+employee::~employee() {
+
+}
+
+void employee::pay() {
+
+}
+
+void employee::promote(int increment) {
+	grade += increment;                            // 提升的级数由increment指定
+}
+
+void employee::setName(string names) {
+	name = names;                                  // 设置姓名
+}
+
+string employee::getName() {
+	return name;                                   // 提取成员姓名
+}
+
+int employee::getIndividualEmpNo() {
+	return individualEmpNo;                        // 提取成员编号
+}
+
+int employee::getGrade() {
+	return grade;                                  // 提取成员级别
+}
+
+float employee::getAccumPay() {
+	return accumPay;                               // 提取月薪
+}
+
+technician::technician() {
+	hourlyRate = 100;                              // 每小时酬金100元
+}
+
+void technician::setWorkHours(int wh) {
+	workHours = wh;                                // 设置工作时间
+}
+
+void technician::pay() throw(MyException) {
+	accumPay = hourlyRate * workHours;             // 计算月薪，按小时计酬
+	if (accumPay < 0 || accumPay > 50000)
+		throw MyException();
+}
+
+void technician::promote(int) {
+	employee::promote(2);
+}
+
+salesman::salesman() {
+	commRate = 0.04;                               // 销售提成比例4%
+}
+
+void salesman::setSales(float sl) {
+	sales = sl;                                    // 设置销售额
+}
+
+void salesman::pay() throw(MyException) {
+	accumPay = sales * commRate;                   // 月薪 = 销售提成
+	if (accumPay < 0 || accumPay > 50000)
+		throw MyException();
+}
+
+void salesman::promote(int) {
+	employee::promote(0);                          // 调用升级函数，升0级
+}
+
+manager::manager() {
+	monthlyPay = 8000;                             // 固定月薪8000元
+}
+
+void manager::pay() throw(MyException) {
+	accumPay = monthlyPay;                         // 月薪总额即固定月薪数
+	if (accumPay < 0 || accumPay > 50000)
+		throw MyException();
+}
+
+void manager::promote(int) {
+	employee::promote(3);                          // 调用升级函数，升3级
+}
+
+salesmanager::salesmanager() {
+	monthlyPay = 5000;
+	commRate = 0.005;
+}
+
+void salesmanager::pay() throw(MyException) {
+	accumPay = monthlyPay + commRate * sales;      // 月薪 = 固定月薪 + 销售提成
+	if (accumPay < 0 || accumPay > 50000)
+		throw MyException();
+}
+
+void salesmanager::promote(int) {
+	employee::promote(2);                          // 调用基类升级函数，升2级
+}
+
+techmanager::techmanager() {
+	monthlyPay = 5000;
+	hourRate = 0.08;
+}
+
+void techmanager::pay() throw(MyException) {
+	accumPay = monthlyPay + hourRate * workHours;
+	if (accumPay < 0 || accumPay > 50000)
+		throw MyException();
+}
+
+void techmanager::promote(int) {
+	employee::promote(2);                          // 调用基类升级函数，升2级
+}
+
+void employee::writeFile() {
+	ofstream outfile;
+	outfile.open("SalaryFile.txt", ios::app);
+	outfile << setiosflags(ios_base::left) << setw(20) << name << "编号" << individualEmpNo
+		<< "级别为" << grade << "级，本月工资" << resetiosflags(ios_base::left) << accumPay << endl;
+	outfile.close();
+}
+
+bool operator>(employee &e1, employee &e2) {       // > 运算符重载
+	if (e1.getAccumPay() > e2.getAccumPay())
+		return true;
+	else return false;
+}
+
+bool operator<(employee &e1, employee &e2) {       // < 运算符重载
+	if (e1.getAccumPay() < e2.getAccumPay())
+		return true;
+	else return false;
+}
+
+template <class T>
+string transToCapital(T s) {                       // 小写转大写
+	if (typeid(s) == typeid(string)) {
+		transform(s.begin(), s.end(), s.begin(), ::toupper);
+	}
+	return s;
+}
+
+bool myfunction(employee* i, employee* j) {
+	return (*i > *j);
+}
+
+
+
+int main() {
+	cout << "职位对应编号：\n" << "经理：1   技术员工：2   销售经理：3   销售员工：4   技术经理：5 \n";
+	cout << "请输入录入人员总数：";
+	int N;
+	char num;
+	cin >> N;
+	vector<employee*> vchar;                       // 声明用于保存成员对象的向量容器
+	string namestr;                                // 输入雇员姓名时首先临时存放在namestr中
+	
+	for (int i = 0; i < N; i++) {
+		cout << "请输入雇员" << i + 1 << "的姓名：";
+		cin >> namestr;
+		cout << "请输入雇员职位编号：";
+		try {
+			cin >> num;
+			if (num != '1' && num != '2' && num != '3' && num != '4' && num != '5')
+				throw "编号输入错误";
+		}
+		catch (const char* msg) {
+			cout << msg << endl;
+		}
+		if (num == '1') {
+			manager* p = new manager();
+			vchar.push_back(p);
+			vchar[i]->setName(namestr);                // 设置每个成员姓名
+			vchar[i]->promote();                       // 升级
+		}
+		else if (num == '2') {
+			technician* p = new technician();
+			cout << "请输入兼职技术人员" << p->getName() << "本月的工作时数：";
+			int ww;
+			cin >> ww;
+			p->setWorkHours(ww);                       // 设置工作时间
+			vchar.push_back(p);
+			vchar[i]->setName(namestr);                // 设置每个成员姓名
+			vchar[i]->promote();                       // 升级
+		}
+		else if (num == '3') {
+			salesmanager* p = new salesmanager();
+			cout << "请输入销售经理" << p->getName() << "所管辖部门本月的销售总额：";
+			float s1;
+			cin >> s1;
+			p->setSales(s1);                           // 设置销售额
+			vchar.push_back(p);
+			vchar[i]->setName(namestr);                // 设置每个成员姓名
+			vchar[i]->promote();                       // 升级
+		}
+		else if (num == '4') {
+			salesman* p = new salesman();
+			cout << "请输入推销员" << p->getName() << "本月的销售额：";
+			float s1;
+			cin >> s1;
+			p->setSales(s1);                           // 设置销售额
+			vchar.push_back(p);
+			vchar[i]->setName(namestr);                // 设置每个成员姓名
+			vchar[i]->promote();                       // 升级
+		}
+		else if (num == '5') {
+			techmanager* p = new techmanager();
+			cout << "请输入技术经理 " << p->getName() << "所管辖部门本月的总工作时数：";
+			int wwl;
+			cin >> wwl;
+			p->setWorkHours(wwl);                      // 设置工作时间
+			vchar.push_back(p);
+			vchar[i]->setName(namestr);                // 设置每个成员姓名
+			vchar[i]->promote();                       // 升级
+		}
+		else i--;
+	}
+
+	for (int i = 0; i < N; i++) {
+		try {
+			vchar[i]->pay();                           // 计算月薪
+		}
+		catch (MyException& e) {
+			cout << e.what() << endl;
+		}
+	}
+
+	sort(vchar.begin(), vchar.end(), myfunction);
+	for (int i = 0; i < N; i++) {
+		cout << setiosflags(ios_base::left) << setw(20) << transToCapital(vchar[i]->getName()) << "编号" << vchar[i]->getIndividualEmpNo()
+			<< "   " << "级别为" << vchar[i]->getGrade() << "级，本月工资" << resetiosflags(ios_base::left) << vchar[i]->getAccumPay() << endl;
+	}
+
+	for (int i = 0; i < N; i++)
+		vchar[i]->writeFile();
+	return 0;
+}

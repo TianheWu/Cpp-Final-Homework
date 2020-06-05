@@ -1,0 +1,85 @@
+#pragma once
+#include <cstring>
+using namespace std;
+
+class employee {
+protected:
+    string name;                                      // 姓名
+    int individualEmpNo;                              // 个人编号
+    int grade;                                        // 级别
+    float accumPay;                                   // 月薪总额
+    static int employeeNo;                            // 本公司职员编号目前最大值
+
+public:
+    employee();                                       // 构造函数
+    ~employee();                                      // 析构函数
+    virtual void pay();                               // 计算月薪函数
+    virtual void promote(int increment = 0);          // 升级函数
+    void setName(string names);                       // 设置姓名函数
+    string getName();                                 // 提取姓名函数
+    int getIndividualEmpNo();                         // 提取编号函数
+    int getGrade();                                   // 提取级别函数
+    float getAccumPay();                              // 提取月薪函数
+    friend bool operator>(employee& e1, employee& e2);
+    void writeFile();                                 // 写入文件
+};
+
+class technician : virtual public employee {          // 兼职技术人员类
+protected:
+    float hourlyRate;                                 // 每小时酬金
+    int workHours;                                    // 当月工作时数
+
+public:
+    technician();                                     // 构造函数
+    void setWorkHours(int wh);                        // 设置工作时数函数
+    virtual void pay();                               // 计算月薪
+    void promote(int);                                // 升级函数
+};
+
+class salesman : virtual public employee {            // 兼职推销员类
+protected:
+    float commRate;                                   // 按销售额提取酬金的百分比
+    float sales;                                      // 当月销售额
+
+public:
+    salesman();                                       // 构造函数
+    void setSales(float sl);                          // 设置销售额函数
+    virtual void pay();                               // 计算月薪函数
+    void promote(int);                                // 升级函数
+};
+
+class manager : virtual public employee {             // 经理类
+protected:
+    float monthlyPay;                                 // 固定月薪数
+
+public:
+    manager();                                        // 构造函数
+    virtual void pay();                               // 计算月新函数
+    void promote(int);                                // 升级函数
+};
+
+class salesmanager : public manager, public salesman {
+public:
+    salesmanager();                                   // 构造函数
+    virtual void pay();                               // 计算月薪函数
+    void promote(int);                                // 升级函数
+};
+
+class techmanager : public manager, public technician {
+protected:
+    float hourRate;                                   // 提成比例
+public:
+    techmanager();                                    // 构造函数
+    virtual void pay();                               // 计算月薪函数
+    void promote(int);                                // 升级函数
+};
+
+class MyException : public exception {
+public:
+    MyException() {
+
+    }
+    const char* what() const throw() {
+        return "收入异常";
+    }
+};
